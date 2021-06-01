@@ -1,0 +1,126 @@
+#
+# train.py configuration file
+# ----------------------------
+#
+
+expirement_base_path: "/share/home/navid/experiments/neuralir/msmarco-passage/bias_ir"
+debug_base_path: "/share/home/navid/experiments/neuralir/debug"
+tqdm_disabled: True
+log_interval: 1000
+eval_log_interval : 10000
+checkpoint_interval: -1 #-1 to ignore
+seed: 1111
+
+#
+# query/passage inputs (train,validate,test)
+# ------------------------------------------
+#
+
+preprocessed_tokenized: True
+
+#
+# training paths (and preprocessing config)
+#
+
+train_tsv: "/share/cp/datasets/ir/msmarco/passage/fair-retrieval-results/triples.train.small.cleaned.neutralityscores.tsv.split-4/*"
+max_training_batch_count: -1 # maximum training batches: -1 for all
+
+#
+# Evaluation parameters
+#
+
+max_evaluation_batch_count: -1 # maximum validation batches: -1 for all
+evaluation_reranking_cutoff: 200
+
+#
+# validation & test paths 
+#
+
+# -1 for disabling this feature, and only run validation after every epoch
+validate_every_n_batches: 15000
+
+validation_tsv: "/share/cp/datasets/ir/msmarco/passage/fair-retrieval-results/dev.fairqueries.top1000.clean.neutralityscores.tsv.split-4/*"
+validation_candidate_set_path: "/share/cp/datasets/ir/msmarco/passage/fair-retrieval-results/run.msmarco-passage.BM25.dev.fairqueries.txt"
+validation_qrels: "/share/cp/datasets/ir/msmarco/passage/qrels.dev.tsv"
+
+# SPARSE - TEST
+test_tsv: "/share/cp/datasets/ir/msmarco/passage/fair-retrieval-results/dev.fairqueries.top1000.clean.neutralityscores.tsv.split-4/*"
+test_qrels: "/share/cp/datasets/ir/msmarco/passage/qrels.dev.tsv"
+test_candidate_set_path: "/share/cp/datasets/ir/msmarco/passage/fair-retrieval-results/run.msmarco-passage.BM25.dev.fairqueries.txt"
+test_files_prefix: "SPARSE-"
+
+# TREC - 2019 - TEST
+#test_tsv: "/share/cp/datasets/ir/msmarco/passage/fair-retrieval-results/test2019.top1000.cleaned.gendered.nongenderedqueries.split-4/*"
+#test_qrels: "/share/cp/datasets/ir/msmarco/passage/test2019-qrels.txt"
+#test_candidate_set_path: "/share/cp/datasets/ir/msmarco/passage/run.msmarco-passage.BM25-k1_0.82_b_0.72.test2019.txt"
+#test_files_prefix: "TREC-19-"
+
+#
+# evaluation
+# --------------------------------------------------------
+#
+
+metric_tocompare: 'recip_rank'  
+trec_eval_path: "/share/rk0/home/navid/trec_eval/trec_eval"
+
+#
+# pre-trained word representation inputs (embedding layer)
+# --------------------------------------------------------
+#
+
+transformers_pretrained_model_id: 'google/bert_uncased_L-2_H-128_A-2' # name identifier of a pre-trained transformers model.
+# google/bert_uncased_L-4_H-256_A-4
+# bert-base-uncased
+
+transformers_tokenizer_model_id: 'bert-base-uncased'
+
+#if 'transformers_pretrained_model_id' is set to 'random' a random Transformer is created based on the following parameters 
+bert_hidden_size: 128
+bert_intermediate_size: 512
+bert_num_heads: 2
+bert_num_layers: 2
+bert_dropout: 0.1
+
+
+#filter_gendered_tokens: False
+#gendered_tokens_path: '/share/cp/datasets/ir/msmarco/passage/genderbias/resources/gendered_words/wordlist_genderspecific.txt'
+
+#
+# trainer hyperparameters
+# -----------------------
+#
+
+model: "bertadv" # available: knrm, conv_knrm, conv_knrm_same_gram, match_pyramid
+
+loss_model: "crossentropy"
+loss_model_maxmargin_margin: 1
+
+optimizer: "adam"
+
+param_group_model_learning_rate: 0.00003
+param_group_model_weight_decay: 0
+
+param_group_adversary_learning_rate: 0.00003
+param_group_adversary_weight_decay: 0
+
+# disable with patience = -1 
+learning_rate_scheduler_patience: -1 # 5
+learning_rate_scheduler_factor: 0.5
+
+epochs: 2
+batch_size_train: 64
+batch_size_eval: 128
+
+# disable with patience = -1 
+early_stopping_patience: -1 # 15
+
+
+# per model params: specify with modelname_param: ...
+# ----------------------------------------------------
+#
+
+# max sequence lengths, disable cutting off with -1
+max_doc_length: 200
+max_query_length: 30
+
+adv_rev_factor: 1.0
