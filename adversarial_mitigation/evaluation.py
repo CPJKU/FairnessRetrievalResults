@@ -109,10 +109,11 @@ def compute_metrics_from_file(evaluator, path_to_candidate):
     result_info = {}
     result_info["metrics_avg"] = results_avg
     result_info["metrics_perq"] = results_perq
-    result_info["qry_doc_relscores"] = qids_to_ranked_candidate_docs
     result_info["cs@n"] = -1
 
-    return result_info
+    qry_doc_relscores = qids_to_ranked_candidate_docs
+    
+    return result_info, qry_doc_relscores
 
 def compute_metrics_at_cutoff(evaluator, path_to_candidate, reference_set_rank, reference_set_tuple,
                               reference_set_cutoff):
@@ -162,10 +163,11 @@ def compute_metrics_at_cutoff(evaluator, path_to_candidate, reference_set_rank, 
     result_info = {}
     result_info["metrics_avg"] = metric_results_avg
     result_info["metrics_perq"] = metric_results_perq
-    result_info["qry_doc_relscores"] = pruned_qids_to_ranked_candidate_docs
     result_info["cs@n"] = reference_set_cutoff
 
-    return result_info
+    qry_doc_relscores = pruned_qids_to_ranked_candidate_docs
+    
+    return result_info, qry_doc_relscores
 
 
 def save_sorted_results(results, file_path, until_rank=-1):
@@ -289,7 +291,7 @@ def predict_relevance(model, cuda_device, eval_tsv, config, logger):
 #
 # evaluate a model + save results and metrics 
 #
-def evaluate_model(model, config, logger, run_folder, cuda_device, evaluator,
+def evaluate_model(model, config, logger, run_folder, cuda_device, evaluator, evaluator_fairness,
                    reference_set_rank, reference_set_tuple, output_files_prefix, output_relative_dir="", testval="val"):
 
     logger.info("[INFERENCE] --- Start")
@@ -301,24 +303,22 @@ def evaluate_model(model, config, logger, run_folder, cuda_device, evaluator,
     # save full rerank results
     #
     logger.info("Saving file with prefix: " + output_files_prefix)
-    fullrerank_path = os.path.join(run_folder, output_relative_dir, "%s%s-run-full-rerank.txt" % (output_files_prefix, testval))
-    save_sorted_results(qry_doc_relscores, fullrerank_path)
+    _fullrerank_runfile_path = os.path.join(run_folder, output_relative_dir, 
+                                            "%s%s-run-full-rerank.txt" % (output_files_prefix, testval))
+    save_sorted_results(qry_doc_relscores, _fullrerank_runfile_path)
 
     #
     # compute evaluation metrics 
     # ---------------------------------
     #
     _cutoff = config["evaluation_reranking_cutoff"]
-    result_info = compute_metrics_at_cutoff(evaluator, fullrerank_path, reference_set_rank, reference_set_tuple,
-                                            reference_set_cutoff=config["evaluation_reranking_cutoff"])
+    result_info, qry_doc_relscores_final = compute_metrics_at_cutoff(evaluator, _fullrerank_runfile_path, 
+                                                                     reference_set_rank, reference_set_tuple,
+                                                                     reference_set_cutoff=config["evaluation_reranking_cutoff"])
     
     # save evaluated rank list
-    _path = os.path.join(run_folder, output_relative_dir, "%s%s-run.txt" % (output_files_prefix, testval)) 
-    save_sorted_results(result_info["qry_doc_relscores"], _path)
-
-    result_info_tosave = {}
-    for _key in result_info:
-        result_info_tosave[_key] = result_info[_key]
+    _final_runfile_path = os.path.join(run_folder, output_relative_dir, "%s%s-run.txt" % (output_files_prefix, testval)) 
+    save_sorted_results(qry_doc_relscores_final, _final_runfile_path)
 
     #
     # save & evaluate the results of the fairness metric
@@ -335,26 +335,34 @@ def evaluate_model(model, config, logger, run_folder, cuda_device, evaluator,
     _accuracy = accuracy_score(_adv_predictions, _adv_labels)
     _accuracy_dummybaseline = 1 - (np.sum(_adv_labels) / float(len(_adv_labels)))
     
-    result_info_tosave["metrics_avg"]["adv_accuracy"] = _accuracy
-    result_info_tosave["metrics_avg"]["adv_accuracy_dummybaseline"] = _accuracy_dummybaseline
+    result_info["metrics_avg"]["adv_accuracy"] = _accuracy
+    result_info["metrics_avg"]["adv_accuracy_dummybaseline"] = _accuracy_dummybaseline
     
-    logger.info("ADVERSARY accuracy: %f" % (_accuracy))
-    logger.info("ADVERSARY dummy baseline accuracy: %f" % (_accuracy_dummybaseline))
-
     _path = os.path.join(run_folder, output_files_prefix + "adversarial-predictions.txt")
     save_adv_predictions(protected_predictions_labels, _path)
     
     # fairness metrics
-    # TODO
+    _fairness_retrivalresults = evaluator_fairness.read_retrievalresults_from_runfile(_final_runfile_path)
+    _fairness_metric_results = evaluator_fairness.calc_FaiRR_retrievalresults(_fairness_retrivalresults)
+    
+    _fairness_metrics = list(_fairness_metric_results['metrics_avg'].keys())
+    _fairness_metrics.sort()
+    for _m in _fairness_metrics:
+        _cutoffs = list(_fairness_metric_results['metrics_avg'][_m].keys())
+        _cutoffs.sort()
+        for _cutoff in _cutoffs:
+            result_info["metrics_perq"]["%s_%d" % (_m, _cutoff)] = _fairness_metric_results['metrics_perq'][_m][_cutoff]
+            result_info["metrics_avg"]["%s_%d" % (_m, _cutoff)] = _fairness_metric_results['metrics_avg'][_m][_cutoff]
     
     # save final results
-    logger.info("Results: %s" % (result_info_tosave["metrics_avg"]))
+    logger.info("Results: %s" % (result_info["metrics_avg"]))
     
     _path = os.path.join(run_folder, output_relative_dir, "%s%s-metrics.txt" % (output_files_prefix, testval)) 
     with open(_path, "w") as fw:
-        fw.write(str(result_info_tosave["metrics_avg"]))
+        fw.write(str(result_info["metrics_avg"]))
     _path = os.path.join(run_folder, output_relative_dir, "%s%s-metrics.pkl" % (output_files_prefix, testval)) 
+    
     with open(_path, "wb") as fw:
-        pickle.dump(result_info_tosave, fw)
-
-    return result_info
+        pickle.dump(result_info, fw)
+    
+    return result_info, qry_doc_relscores_final

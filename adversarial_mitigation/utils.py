@@ -52,7 +52,7 @@ def load_config(config_path:str) ->Dict[str, any] :
 def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('--run-name', action='store', dest='run_name',
-                        help='run name, used for the run folder (no spaces, special characters)', required=False)
+                        help='run name, used for the run folder (no spaces, special characters)', required=True)
     parser.add_argument('--run-folder', action='store', dest='run_folder',
                         help='run folder if it exists, if not set a new one is created using run-name', required=False)
     parser.add_argument('--pretrained-model-folder', action='store', dest='pretrained_model_folder',
@@ -147,31 +147,7 @@ def prepare_experiment(args):
         else:
             _base_path = config["expirement_base_path"]
 
-        if (args.mode != 'attack'):
-            if args.run_name is None:
-                _model_id = config["model"]
-                _trans_model_id = config["transformers_pretrained_model_id"]
-                if _trans_model_id == 'google/bert_uncased_L-2_H-128_A-2':
-                    _trans_model_id = 'L2'
-                elif _trans_model_id == 'google/bert_uncased_L-4_H-256_A-4':
-                    _trans_model_id = 'L4'
-                _model_id = _trans_model_id
-
-                _base_model = _model_id
-                if args.pretrained_model_folder is not None:
-                    _base_model = os.path.split(args.pretrained_model_folder)[-1]
-                    _base_model = _base_model[21:]
-                    _base_model = _base_model.replace("mainadv", "t").replace("#", "")
-
-                if args.mode == 'base':
-                    args.run_name = '%s#%s' % (_base_model, str(args.mode))
-
-                elif args.mode == 'debias':
-                    args.run_name = '%s#%s#ARF%.2f' % (_base_model, str(args.mode), config["adv_rev_factor"])
-                elif args.mode == 'attack':
-                    args.run_name = '%s#%s' % (_base_model, str(args.mode))
-
-        else:
+        if (args.mode == 'attack'):
             _base_path = args.pretrained_model_folder
             _attack_number = 0
             while (True):

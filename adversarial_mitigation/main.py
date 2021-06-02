@@ -15,7 +15,6 @@ import argparse
 import copy
 import os
 import pdb
-#import GPUtil
 import pickle
 import glob
 import time
@@ -28,6 +27,7 @@ import torch
 import torch.optim as optim
 from torch.optim.lr_scheduler import *
 import torch.multiprocessing as mp
+from torch.utils.tensorboard import SummaryWriter
 
 from allennlp.common import Params, Tqdm
 from allennlp.data.iterators import BucketIterator
@@ -44,9 +44,10 @@ from transformers import BertTokenizer
 from model import *
 from optimizers import Optimizer
 from utils import *
-from eval_models import *
+from evaluation import *
 from multiprocess_input_pipeline import *
-from eval_evaluation_tool import EvaluationToolTrec, EvaluationToolMsmarco
+from metrics_fairness import FaiRRMetric
+from metrics_utility import EvaluationToolTrec, EvaluationToolMsmarco
 
 Tqdm.default_mininterval = 1
 
@@ -61,33 +62,35 @@ def evaluate_validation():
     if not os.path.exists(_output_relative_dir):
         os.makedirs(_output_relative_dir)
     
-    _validate_result_info = evaluate_model(model, config, logger, run_folder, cuda_device,
-                                           evaluator=evaluator_val,
-                                           reference_set_rank=reference_set_rank_val, 
-                                           reference_set_tuple=reference_set_tuple_val,
-                                           output_files_prefix="",
-                                           output_relative_dir=_output_relative_dir,
-                                           testval="validation")
+    _result_info, _qry_doc_relscores = evaluate_model(model, config, logger, run_folder, cuda_device,
+                                                      evaluator=evaluator_val,
+                                                      evaluator_fairness=evaluator_fairness,
+                                                      reference_set_rank=reference_set_rank_val, 
+                                                      reference_set_tuple=reference_set_tuple_val,
+                                                      output_files_prefix="",
+                                                      output_relative_dir=_output_relative_dir,
+                                                      testval="validation")
     
-    #writer.add_scalar("validation/%s" % config["metric_tocompare"], 
-    #                  _validate_result_info["metrics_avg"][config["metric_tocompare"]], batch_cnt_global)
-    
+    for _m in _result_info["metrics_avg"]:
+        tb_writer.add_scalar("val/%s" % _m, _result_info["metrics_avg"][_m], batch_cnt_global)
+
     _metric = config["metric_tocompare"]
     if ((args.mode in ['debias', 'attack']) or (best_result_info is None) or 
-        (_validate_result_info["metrics_avg"][_metric] > best_result_info["metrics_avg"][_metric])):
+        (_result_info["metrics_avg"][_metric] > best_result_info["metrics_avg"][_metric])):
         
-        best_result_info = _validate_result_info
+        best_result_info = _result_info
         
         # save validation results
         _best_result_output_path = os.path.join(run_folder, "validation-best-run.txt")
         _best_result_info_path = os.path.join(run_folder, "validation-best-metrics.txt")
         _best_result_info_pkl_path = os.path.join(run_folder, "validation-best-metrics.pkl")
         
-        save_sorted_results(best_result_info["qry_doc_relscores"], _best_result_output_path)    
+        save_sorted_results(_qry_doc_relscores, _best_result_output_path)    
 
         with open(_best_result_info_path, "w") as fw:
             fw.write("{'metrics_avg':%s, 'epoch':%d, 'batch_number':%d}" % 
                      (str(best_result_info["metrics_avg"]), epoch, batch_cnt_global))
+        
         with open(_best_result_info_pkl_path, "wb") as fw:
             pickle.dump(best_result_info, fw)
         
@@ -95,10 +98,9 @@ def evaluate_validation():
         logger.info("Saving new model with %s of %.4f at %s" % (_metric, 
                                                                 best_result_info['metrics_avg'][_metric],
                                                                 best_model_store_path))
-        #writer.add_text("checkpoint", "saving best model at epoch %3d and %5d batches" % (epoch, i), batch_cnt_global)
         model_save(best_model_store_path, model, best_result_info)
 
-    return _validate_result_info
+    return _result_info
         
 #
 # main process
@@ -118,7 +120,7 @@ if __name__ == "__main__":
 
     run_folder, config = prepare_experiment(args)
     
-    writer = None #SummaryWriter(run_folder)
+    tb_writer = SummaryWriter(run_folder)
 
     logger = get_logger_to_file(run_folder, "main")
 
@@ -126,7 +128,7 @@ if __name__ == "__main__":
     logger.info("Experiment folder: %s", run_folder)
     logger.info("Config vars: %s", str(config))
 
-    #writer.add_text("info", "Config vars: %s" % str(config))
+    tb_writer.add_text("info", "Config vars: %s" % str(config))
 
     logger.info('-' * 89)
     logger.info("Starting experiment %s", args.run_name)
@@ -138,7 +140,6 @@ if __name__ == "__main__":
     if torch.cuda.is_available():
         if not args.cuda:
             logger.warning("You have a CUDA device, so you should probably run with --cuda")
-            #writer.add_text("warning", "You have a CUDA device, so you should probably run with --cuda")
         else:
             torch.cuda.manual_seed_all(config["seed"])
 
@@ -153,9 +154,12 @@ if __name__ == "__main__":
         cuda_device = -1
 
 
-    #
-    # load candidate set for efficient cs@N validation
-    #
+    ###############################################################################
+    # Evaluation 
+    ###############################################################################
+
+    # utility
+    
     logger.info('Loading validation qrels and reference set')
     reference_set_rank_val, reference_set_tuple_val = parse_reference_set(config["validation_candidate_set_path"],
                                                                           config["evaluation_reranking_cutoff"])
@@ -167,7 +171,11 @@ if __name__ == "__main__":
                                                                             config["evaluation_reranking_cutoff"])
     evaluator_test = EvaluationToolTrec(trec_eval_path=config["trec_eval_path"], qrel_path=config["test_qrels"])
 
-
+    # fairness
+    
+    _background_doc_set = FaiRRMetric.read_documentset_from_retrievalresults(config["background_runfile_path"])
+    evaluator_fairness = FaiRRMetric(config["collection_neutrality_path"], _background_doc_set)
+    
     ###############################################################################
     # Load data 
     ###############################################################################
@@ -203,10 +211,6 @@ if __name__ == "__main__":
     logger.info('Model total parameters: %s', sum(p.numel() for p in model.parameters()))
     logger.info('Model total trainable parameters: %s', sum(p.numel() for p in model.parameters() if p.requires_grad))
 
-    #writer.add_text("model", "Model: %s" % str(model))
-    #writer.add_text("model", "Total parameters: %s" % (sum(p.numel() for p in model.parameters())))
-    #writer.add_text("model", "Total trainable parameters: %s" % (sum(p.numel() for p in model.parameters() if p.requires_grad)))
-    
     ###############################################################################
     # Train and Validation
     ###############################################################################
@@ -340,7 +344,6 @@ if __name__ == "__main__":
                 i = 0
                 batch_null_cnt = 0
                 max_training_batch_count = config["max_training_batch_count"]
-                #writer.add_text("epochs", "epoch %3d started" % epoch, batch_cnt_global)
                 
                 # do validation at the begining
                 if "save_test_during_validation" in config:
@@ -433,7 +436,7 @@ if __name__ == "__main__":
                     #
                     # logging
                     #
-                    #writer.add_scalar("loss", loss.item(), batch_cnt_global)
+                    tb_writer.add_scalar("train/loss", loss.item(), batch_cnt_global)
                     if (i % config["log_interval"] == 0) and (i != 0):
                         cur_loss_model = loss_sum_model / float(data_cnt_all)
                         cur_loss_adv = loss_sum_adv / float(data_cnt_all)
@@ -449,8 +452,6 @@ if __name__ == "__main__":
                         
                     if config["checkpoint_interval"] != -1 and i % config["checkpoint_interval"] == 0 and i > 0:
                         logger.info("saving checkpoint at epoch %3d and %5d batches" % (epoch, i))
-                        #writer.add_text("checkpoint", "saving checkpoint at epoch %3d and %5d batches" % (epoch, i),
-                        #                batch_cnt_global)
                         checkpoint_save(checkpoint_model_store_path, model, criterion, optimizer_model, epoch, i)
 
                     #
@@ -467,13 +468,9 @@ if __name__ == "__main__":
                             if early_stopper is not None:
                                 if early_stopper.step(_result_info["metrics_avg"][config["metric_tocompare"]]):
                                     logger.info("early stopping epoch %d batch count %d" % (epoch, i))
-                                    #writer.add_text("earlystop", "early stopping at epoch %3d and %5d batches" % (epoch, i),
-                                    #                batch_cnt_global)
                                     break
                             
                     i += 1 #next batch
-
-                #writer.add_text("epochs", "epoch %3d finished with %5d batches" % (epoch, i), batch_cnt_global)
 
                 # make sure we didn't make a mistake in the configuration / data preparation
                 if training_queue.qsize() != 0 and config["max_training_batch_count"] == -1:
@@ -489,7 +486,6 @@ if __name__ == "__main__":
                 
                 if config["checkpoint_interval"] != -1:
                     logger.info("saving checkpoint at epoch %d after %d batches" % (epoch, i))
-                    #writer.add_text("checkpoint", "saving checkpoint at epoch %3d batches %5d" % (epoch, i), batch_cnt_global)
                     checkpoint_save(checkpoint_model_store_path, model, criterion, optimizer_model, epoch, i)
 
                 #terminating sub processes
@@ -507,7 +503,6 @@ if __name__ == "__main__":
                 if early_stopper is not None:
                     if early_stopper.step(_result_info["metrics_avg"][config["metric_tocompare"]]):
                         logger.info("early stopping epoch %d" % epoch)
-                        #writer.add_text("earlystop", "early stopping at the end of epoch %3d" % epoch, batch_cnt_global)
                         break
 
         except Exception as e:
@@ -542,14 +537,19 @@ if __name__ == "__main__":
 
         logger.info("Testing the model")
         
-        test_result_info = evaluate_model(model, config, logger, run_folder, cuda_device,
-                                          evaluator=evaluator_test,
-                                          reference_set_rank=reference_set_rank_test, 
-                                          reference_set_tuple=reference_set_tuple_test,
-                                          output_files_prefix=config["test_files_prefix"],
-                                          output_relative_dir="",
-                                          testval="test")
+        _result_info, _ = evaluate_model(model, config, logger, run_folder, cuda_device,
+                                         evaluator=evaluator_test,
+                                         evaluator_fairness=evaluator_fairness,
+                                         reference_set_rank=reference_set_rank_test, 
+                                         reference_set_tuple=reference_set_tuple_test,
+                                         output_files_prefix=config["test_files_prefix"],
+                                         output_relative_dir="",
+                                         testval="test")
         
-        
+        for _m in _result_info["metrics_avg"]:
+            tb_writer.add_scalar("test/%s" % _m, _result_info["metrics_avg"][_m], 0)
+
+
+    
     logger.info('Fertig!')
     

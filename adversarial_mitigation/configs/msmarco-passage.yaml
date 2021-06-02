@@ -63,6 +63,10 @@ test_files_prefix: "SPARSE-"
 metric_tocompare: 'recip_rank'  
 trec_eval_path: "/share/rk0/home/navid/trec_eval/trec_eval"
 
+# fairness metric
+collection_neutrality_path: '/share/cp/datasets/ir/msmarco/passage/fair-retrieval-results/collection_neutralityscores.tsv'
+background_runfile_path: '/share/cp/datasets/ir/msmarco/passage/fair-retrieval-results/run.msmarco-passage.BM25.dev.fairqueries.txt'
+
 #
 # pre-trained word representation inputs (embedding layer)
 # --------------------------------------------------------

@@ -5,9 +5,6 @@ import pdb
 import pickle
 import argparse
 
-import eval_scripts
-
-
 MAX_MRR_RANK = 200
 
 class EvaluationTool():
@@ -52,9 +49,19 @@ class EvaluationToolTrec(EvaluationTool):
         os.rename(run_path_temp, run_path)
 
 
+    def save_sorted_results(self, results, file_path):
+        with open(file_path, "w") as val_file:
+            for qid in results.keys():
+                query_data = list(results[qid].items())
+                query_data.sort(key=lambda x: x[1], reverse=True)
+                # sort the results per query based on the output
+                for rank_i, (docid, score) in enumerate(query_data):
+                    #val_file.write("\t".join(str(x) for x in [query_id, doc_id, rank_i + 1, output_value])+"\n")
+                    val_file.write("%s Q0 %s %d %f neural\n" % (str(qid), str(docid), rank_i + 1, score))
+
     def evaluate(self, candidate, run_path_for_save, evalparam="-q", validaterun=False):
         
-        eval_scripts.save_sorted_results(candidate, run_path_for_save)
+        self.save_sorted_results(candidate, run_path_for_save)
         results_avg, results_perq = self.evaluate_from_file(candidate_path=run_path_for_save, 
                                                             evalparam=evalparam, validaterun=validaterun)
         os.remove(run_path_for_save)
