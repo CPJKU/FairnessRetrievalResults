@@ -2,17 +2,9 @@
 
 ## Dataset
 
-The dataset consists of the annotated fairness sensitive queries, filtered from the queries of MS MARCO Passage Retrieval development set and TREC Deep Learning 2019 Passage Retrieval. The following files provide the identifier and text of the queries.
+The dataset consists of the annotated fairness sensitive queries, filtered from the queries of MS MARCO Passage Retrieval development set and TREC Deep Learning 2019 Passage Retrieval. The files `msmarco_passage.dev.fair.FULL_ANNOTATION.tsv` and `trecdeep19_passage.fair.FULL_ANNOTATION.tsv` provide the full annotation of the queries, containing the corresponding categories, domains, and subdomains. Simpler vesrions of the corresponding files are provided in The files `msmarco_passage.dev.fair.tsv` and `trecdeep19_passage.fair.tsv`, only containing the identifier and text of the queries.
 
-- `msmarco_passage.dev.fair.tsv`
-- `trecdeep19_passage.fair.tsv`
-
-The following files provide the full annotation of the queries, containing the corresponding categories, domains, and aspects.  
-
-- `msmarco_passage.dev.fair.FULL_ANNOTATION.tsv`
-- `trecdeep19_passage.fair.FULL_ANNOTATION.tsv`
-
-The files has the following columns:
+The files contain following columns:
 - `QID`: identifier as provided in the original collections.
 - `Query`:  the free text of the query taken from the original collections.
 - `Categories`: Societal categories or challenges as defined in [1]. A record can contain more than one category, which in this case they are separated with comma `,`.
