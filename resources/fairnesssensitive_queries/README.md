@@ -92,5 +92,6 @@ We understand the annotation of the dataset as a continuous collaborative effort
 
 ### References
 [1] UN Women Headquarters. 2020. UN Women Gender equality: Women’s rights in review 25 years after Beijing. https://www.unwomen.org/en/digital-library/publications/2020/03/womens-rights-in-review. Accessed: 2021-02-06.
+
 [2] Madarova, Zuzana & Barbieri, Davide & Guidorzi, Brianna & Janeckova, Hedvika & Karu, Marre & Mollard, Blandine & Reingardė, Jolanta. (2019). Intersecting Inequalities: Gender Equality Index. 10.2839/308776.
 
