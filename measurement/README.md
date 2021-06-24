@@ -1,3 +1,7 @@
+# Fairness of Retrieval Results (FaiRR) Metric
+
+
+
 First, calculate the neutrality scores for the documents in collection:
 ```
 python3 calc_documents_neutrality.py --collection-path [PATH_TO_TSV_COLLECTION] --representative-words-path ../resources/wordlists/wordlist_gender_representative.txt --threshold 1 --out-file processed/collection_neutralityscores.tsv
