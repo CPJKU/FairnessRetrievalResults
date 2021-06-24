@@ -20,49 +20,72 @@ The files has the following columns:
 `Examples/Description`:  Some examples describing how the biased results for the query could possible affect the information seeker's perception regarding societal biases, and in longer run could intensify/establish these biases.
 
 ### Details of Annotation
-Annotations you currently find in the dataset are mainly inspired by two sources: First, a review of women right and challenges provided by UN-Women [1] forms the basis for `Category/Challenge`. Second a report [2] developed by the research team of the European Institute for Gender Equality (EIGE) presents and discusses the Gender Equality Index, which we extracted the fields `Domain` and `Subdomain` from. In the table below we aim to match definitions extracted from both sources. This serves as a guideline for our annotation of socially problematic queries.
+Annotations you currently find in the dataset are mainly inspired by two sources: First, a review of women right and challenges provided by UN-Women [1] forms the basis for `Categories`. Second a report [2] developed by the research team of the European Institute for Gender Equality (EIGE) presents and discusses the Gender Equality Index, which we extracted the fields `Domains` and `Subdomains` from. In the table below we aim to match definitions extracted from both sources. This serves as a guideline for our annotation of socially problematic queries.
 
 <table>
     <thead>
         <tr>
-            <th>Layer 1</th>
-            <th>Layer 2</th>
-            <th>Layer 3</th>
+            <th>Categories</th>
+            <th>Domains</th>
+            <th>Subdomains</th>
         </tr>
     </thead>
     <tbody>
         <tr>
-            <td rowspan=4>L1 Name</td>
-            <td rowspan=2>L2 Name A</td>
-            <td>L3 Name A</td>
+            <td rowspan=2>Career</td>
+            <td rowspan=2>Work</td>
+            <td>Participation</td>
         </tr>
         <tr>
-            <td>L3 Name B</td>
+            <td>Segregation and Quality of Work</td>
         </tr>
         <tr>
-            <td rowspan=2>L2 Name B</td>
-            <td>L3 Name C</td>
+            <td rowspan=2>Education</td>
+            <td rowspan=2>Knowledge</td>
+            <td>Attainment and participation</td>
         </tr>
         <tr>
-            <td>L3 Name D</td>
+            <td>Segregation</td>
+        </tr>
+        <tr>
+            <td rowspan=4>Social Inequality</td>
+            <td rowspan=2>Time</td>
+            <td>Care activities</td>
+        </tr>
+        <tr>
+            <td>Social activities</td>
+        </tr>
+        <tr>
+            <td rowspan=2>Money</td>
+            <td>Financial Resources</td>
+        </tr>
+        <tr>
+            <td>Economic Situation</td>
+        </tr>
+        <tr>
+            <td rowspan=3>Politics</td>
+            <td rowspan=3>Power</td>
+            <td>Political</td>
+        </tr>
+        <tr>
+            <td>Economic</td>
+        </tr>
+        <tr>
+            <td>Social</td>
+        </tr>
+        <tr>
+            <td rowspan=3>Health</td>
+            <td rowspan=3>Health</td>
+            <td>Status</td>
+        </tr>
+        <tr>
+            <td>Behavior</td>
+        </tr>
+        <tr>
+            <td>Access</td>
         </tr>
     </tbody>
 </table>
-
-| Category/Challenge | Domain | Subdomain(s) |
-| ----------- | ----------- | ----------- |
-| Career | Work | "Participation" & "Segregation and Quality of Work"|
-| Education | Knowledge | "Attainment and participation" & "Segregation"|
-| Social Inequality | Time | "Care activities" & "Social activities"
-	Money	Financial Resources
-		Economic Situation
-Politics	Power	Political
-		Economic
-		Social
-Health	Health	Status
-		Behavior
-		Access
-
 
 ### Disclaimer
 We understand the annotation of the dataset as a continuous collaborative effort of the community. We do not argue them to be exclusive nor complete. It may broadly depend on the context of the results in which way they could influence societal norm or awareness raising of information seekers. The annotation should rather serve as an exemplary illustration of possible impacts.
