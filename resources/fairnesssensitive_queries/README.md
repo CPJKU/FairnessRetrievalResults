@@ -18,7 +18,7 @@ The files has the following columns:
 `Categories`: Societal categories or challenges as defined in [1]. A record can contain more than one category, which in this case they are separated with comma `,`.
 `Domains`: Domains as defined in the gender equality index [2].	A record can contain more than one domain, which in this case they are separated with comma `,`.
 `Subdomains`: Subdomains as defined in [2] and additional facets that are commonly discussed in literature. A record can contain more than one subdomain, which in this case they are separated with comma `,`.
-`Examples/Description`:  Some examples describing how the biased results for the query could possible affect the information seeker's perception regarding societal biases, and in longer run could intensify/establish these biases.
+`Example/Description`:  A possible example or situation, describing how the biased results for this query could affect the information seeker's perception regarding societal biases, and in longer run could intensify/establish such biases in society.
 
 ## Annotation Details
 Annotations you currently find in the dataset are mainly inspired by two sources: First, a review of women right and challenges provided by UN-Women [1] forms the basis for `Categories`. Second a report [2] developed by the research team of the European Institute for Gender Equality (EIGE) presents and discusses the Gender Equality Index, which we extracted the fields `Domains` and `Subdomains` from. In the table below we aim to match definitions extracted from both sources. This serves as a guideline for our annotation of socially problematic queries.
