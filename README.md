@@ -4,8 +4,7 @@ The repository provides the code and resources for measuring and addressing soci
 
 Societal Biases in Retrieved Contents: Measurement Framework and Adversarial Mitigation of BERT Rankers.\
 *Navid Rekabsaz, Simone Kopeinik, Markus Schedl*. \
-In proceedings of the 44th International ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR 2021).\
-[Paper](https://arxiv.org/abs/2104.13640)
+In proceedings of the 44th International ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR 2021). [Paper](https://arxiv.org/abs/2104.13640)
 
 Please find more information about each of the contributions in its corresponding folder:
 
