@@ -1,8 +1,8 @@
-# Fairness Sensetive Queries
+# Fairness Sensitive Queries
 
 ## Dataset
 
-The dataset consists of the annotated fairness sensetive queries, filtered from the queries of MS MARCO Passage Retrieval developement set and TREC Deep Learning 2019 Passage Retrieval. The following files provide the identifier and text of the queries.
+The dataset consists of the annotated fairness sensitive queries, filtered from the queries of MS MARCO Passage Retrieval development set and TREC Deep Learning 2019 Passage Retrieval. The following files provide the identifier and text of the queries.
 
 - `msmarco_passage.dev.fair.tsv`
 - `trecdeep19_passage.fair.tsv`
