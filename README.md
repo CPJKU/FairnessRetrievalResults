@@ -1,5 +1,12 @@
 # Welcome
-The repository is now under construction. If you immediately need access to the paper's resources, please contact [Navid](mailto:navid.rekabsaz@jku.at).
+
+The repository provides the code and resources for measuring/addressing societal biases in retrieval results. Please find more information about the contributions of the work in each of the following folders:
+
+- `dataset`: the dataset of fairness sensitive queries.
+- `measurement`: the code for measuring FaiRR and NFaiRR metrics on ranking results as well as ranker-agnostic document sets. 
+- `adversarial_mitigation`: codes for adversarial training of BERT rankers (AdvBERT).
+
+For any question please contact [Navid](mailto:navid.rekabsaz@jku.at).
 
 # Reference
 ```
