@@ -14,6 +14,6 @@ Please consider that the current code expects the collection to be in one TSV fi
 
 Given any TREC-formatted run file, the fairness metrics can be calculated using the following command:
 ```
-python metrics_fairness.py --collection-neutrality-path processed/collection_neutralityscores.tsv --backgroundrunfile sample_trec_runs/msmarco_passage/BM25.run --runfile sample_trec_runs/msmarco_passage/advbert_L4.run --print-qry-results
+python metrics_fairness.py --collection-neutrality-path processed/collection_neutralityscores.tsv --backgroundrunfile sample_trec_runs/msmarco_passage/BM25.run --runfile sample_trec_runs/msmarco_passage/advbert_L4.run
 ```
 
