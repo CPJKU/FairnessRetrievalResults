@@ -16,6 +16,8 @@ from typing import Dict, Tuple, List
 
 from transformers import BertTokenizer, BartTokenizer
 
+from fairness_measurement.document_neutrality import DocumentNeutrality
+
 #
 # Multiprocess input pipeline
 # -------------------------------
@@ -62,12 +64,16 @@ def multiprocess_training_loader(process_number: int, _config, _queue: mp.Queue,
                                  _local_file):
 
     _transformers_tokenizer = BertTokenizer.from_pretrained(_config["transformers_tokenizer_model_id"])
+    _doc_neutrality = DocumentNeutrality(representative_words_path=_config["neutrality_representative_words_path"],
+                                         threshold=_config["neutrality_threshold"],
+                                         groups_portion={'f':0.5, 'm':0.5})
 
-    _triple_loader  = IrTripleTransformersNeutralityScoresDatasetReader(lazy=True, 
-                                                                transformers_tokenizer = _transformers_tokenizer,
-                                                                add_special_tokens = False,
-                                                                max_doc_length = _config["max_doc_length"],
-                                                                max_query_length = _config["max_query_length"])
+    _triple_loader  = IrTripleTransformersNeutralityScoresDatasetReader(lazy=True,
+                                                                        transformers_tokenizer = _transformers_tokenizer,
+                                                                        add_special_tokens = False,
+                                                                        max_doc_length = _config["max_doc_length"],
+                                                                        max_query_length = _config["max_query_length"],
+                                                                        doc_neutrality=_doc_neutrality)
     _iterator = BucketIterator(batch_size=int(_config["batch_size_train"]),
                                sorting_keys=[("doc_pos_tokens", "dimension_0"), ("doc_neg_tokens", "dimension_0")])
     
@@ -87,12 +93,16 @@ def multiprocess_validation_loader(process_number: int, _config, _queue: mp.Queu
                                    _local_file):
 
     _transformers_tokenizer = BertTokenizer.from_pretrained(_config["transformers_tokenizer_model_id"])
+    _doc_neutrality = DocumentNeutrality(representative_words_path=_config["neutrality_representative_words_path"],
+                                         threshold=_config["neutrality_threshold"],
+                                         groups_portion={'f':0.5, 'm':0.5})
 
-    _tuple_loader  = IrTupleTransformersNeutralityScoresDatasetReader(lazy=True, 
-                                                              transformers_tokenizer=_transformers_tokenizer,
-                                                              add_special_tokens=False,
-                                                              max_doc_length=_config["max_doc_length"],
-                                                              max_query_length=_config["max_query_length"])
+    _tuple_loader  = IrTupleTransformersNeutralityScoresDatasetReader(lazy=True,
+                                                                      transformers_tokenizer=_transformers_tokenizer,
+                                                                      add_special_tokens=False,
+                                                                      max_doc_length=_config["max_doc_length"],
+                                                                      max_query_length=_config["max_query_length"],
+                                                                      doc_neutrality=_doc_neutrality)
     _iterator = BucketIterator(batch_size=int(_config["batch_size_train"]),
                                sorting_keys=[("doc_tokens", "dimension_0"), ("query_tokens", "dimension_0")])
     

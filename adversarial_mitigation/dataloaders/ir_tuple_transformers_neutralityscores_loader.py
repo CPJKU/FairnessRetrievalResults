@@ -29,8 +29,7 @@ class IrTupleTransformersNeutralityScoresDatasetReader(DatasetReader):
                  max_query_length:int = -1,
                  lazy: bool = False,
                  preprocess: Callable = None,
-                 filter_gendered_tokens: bool = False,
-                 gendered_tokens: Set = []
+                 doc_neutrality=None
                  ) -> None:
         super().__init__(lazy)
         #self._pre_tokenizer = WhitespaceTokenizer()
@@ -39,8 +38,7 @@ class IrTupleTransformersNeutralityScoresDatasetReader(DatasetReader):
         self._max_doc_length = max_doc_length
         self._max_query_length = max_query_length
         self._preprocess = preprocess
-        self._filter_gendered_tokens = filter_gendered_tokens
-        self._gendered_tokens = gendered_tokens                 
+        self.doc_neutrality = doc_neutrality               
 
     @overrides
     def _read(self, file_path):
@@ -54,16 +52,18 @@ class IrTupleTransformersNeutralityScoresDatasetReader(DatasetReader):
                         continue
 
                     line_parts = line.split('\t')
-                    if len(line_parts) != 6:
+                    if len(line_parts) != 4:
                         sys.stdout.write ("Invalid line format: %s (line number %d)\n" % (line, line_num + 1))
                         sys.stdout.flush()
                         raise ConfigurationError("Invalid line format: %s (line number %d)" % (line, line_num + 1))
-                    query_id, doc_id, query_sequence, doc_sequence, query_neutscore, doc_neutscore = line_parts
+                    query_id, doc_id, query_sequence, doc_sequence = line_parts
                     if self._preprocess != None:
                         query_sequence = self._preprocess(query_sequence)
                         doc_sequence = self._preprocess(doc_sequence)
-                    query_neutscore = float(query_neutscore)
-                    doc_neutscore = float(doc_neutscore)
+                    
+                    query_neutscore = self.doc_neutrality.get_neutrality(query_sequence.split(' '))
+                    doc_neutscore = self.doc_neutrality.get_neutrality(doc_sequence.split(' '))
+                
                     yield self.text_to_instance(query_id, doc_id, query_sequence, doc_sequence, query_neutscore, doc_neutscore)
         except Exception as e: 
             sys.stdout.write(e)
@@ -82,9 +82,6 @@ class IrTupleTransformersNeutralityScoresDatasetReader(DatasetReader):
             query_sequence = "@@UNKNOWN@@"
 
         query_pre_tokenized = query_sequence.split()
-        if self._filter_gendered_tokens:
-            query_pre_tokenized = [_t for _t in query_pre_tokenized if _t.lower() not in self._gendered_tokens]
-
         if self._max_query_length > -1:
             query_pre_tokenized = query_pre_tokenized[:self._max_query_length]
         query_tokenized = self._transformers_tokenizer(' '.join(query_pre_tokenized),
@@ -92,9 +89,6 @@ class IrTupleTransformersNeutralityScoresDatasetReader(DatasetReader):
                                                        add_special_tokens = self._add_special_tokens)["input_ids"]
         
         doc_pre_tokenized = doc_sequence.split()
-        if self._filter_gendered_tokens:
-            doc_pre_tokenized = [_t for _t in doc_pre_tokenized if _t.lower() not in self._gendered_tokens]
-
         if self._max_doc_length > -1:
             doc_pre_tokenized = doc_pre_tokenized[:self._max_doc_length]
         doc_tokenized = self._transformers_tokenizer(' '.join(doc_pre_tokenized),

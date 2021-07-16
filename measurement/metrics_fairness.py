@@ -80,8 +80,9 @@ class FaiRRMetric:
         return {'metrics_avg': {'FaiRR': FaiRR, 'NFaiRR': NFaiRR}, 
                 'metrics_perq': {'FaiRR': FaiRR_perq, 'NFaiRR': NFaiRR_perq}}
 
-    @staticmethod
-    def read_retrievalresults_from_runfile(trec_run_path, cut_off=200):
+class FaiRRMetricHelper:
+
+    def read_retrievalresults_from_runfile(self, trec_run_path, cut_off=200):
         retrievalresults = {}
         
         print ("Reading %s" % trec_run_path)
@@ -111,9 +112,8 @@ class FaiRRMetric:
         
         return retrievalresults
     
-    @staticmethod
-    def read_documentset_from_retrievalresults(trec_run_path):
-        _retrivalresults_background = FaiRRMetric.read_retrievalresults_from_runfile(trec_run_path)
+    def read_documentset_from_retrievalresults(self, trec_run_path):
+        _retrivalresults_background = self.read_retrievalresults_from_runfile(trec_run_path)
         background_doc_set = {}
         for _qryid in _retrivalresults_background:
             background_doc_set[_qryid] = set(_retrivalresults_background[_qryid])

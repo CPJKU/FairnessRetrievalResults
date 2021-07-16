@@ -27,8 +27,7 @@ class IrTripleTransformersNeutralityScoresDatasetReader(DatasetReader):
                  max_query_length:int = -1,
                  lazy: bool = False,
                  preprocess: Callable = None,
-                 filter_gendered_tokens: bool = False,
-                 gendered_tokens: Set = []
+                 doc_neutrality=None
                  ) -> None:
         super().__init__(lazy)
         #self._pre_tokenizer = WhitespaceTokenizer()
@@ -37,9 +36,8 @@ class IrTripleTransformersNeutralityScoresDatasetReader(DatasetReader):
         self._max_doc_length = max_doc_length
         self._max_query_length = max_query_length
         self._preprocess = preprocess
-        self._filter_gendered_tokens = filter_gendered_tokens
-        self._gendered_tokens = gendered_tokens                 
-
+        self.doc_neutrality = doc_neutrality
+        
     @overrides
     def _read(self, file_path):
         with open(cached_path(file_path), "r", encoding="utf8") as data_file:
@@ -51,16 +49,18 @@ class IrTripleTransformersNeutralityScoresDatasetReader(DatasetReader):
                     continue
  
                 line_parts = line.split('\t')
-                if len(line_parts) != 6:
+                if len(line_parts) != 3:
                     raise ConfigurationError("Invalid line format: %s (line number %d)" % (line, line_num + 1))
-                query_sequence, doc_pos_sequence, doc_neg_sequence, query_neutscore, doc_pos_neutscore, doc_neg_neutscore = line_parts
+                query_sequence, doc_pos_sequence, doc_neg_sequence = line_parts
                 if self._preprocess != None:
                     query_sequence = self._preprocess(query_sequence)
                     doc_pos_sequence = self._preprocess(doc_pos_sequence)
                     doc_neg_sequence = self._preprocess(doc_neg_sequence)
-                query_neutscore = float(query_neutscore)
-                doc_pos_neutscore = float(doc_pos_neutscore)
-                doc_neg_neutscore = float(doc_neg_neutscore)
+                    
+                query_neutscore = self.doc_neutrality.get_neutrality(query_sequence.split(' '))
+                doc_pos_neutscore = self.doc_neutrality.get_neutrality(doc_pos_sequence.split(' '))
+                doc_neg_neutscore = self.doc_neutrality.get_neutrality(doc_neg_sequence.split(' '))
+                
                 yield self.text_to_instance(query_sequence, doc_pos_sequence, doc_neg_sequence, 
                                             query_neutscore, doc_pos_neutscore, doc_neg_neutscore)
 
@@ -72,9 +72,6 @@ class IrTripleTransformersNeutralityScoresDatasetReader(DatasetReader):
             query_sequence = "@@UNKNOWN@@"
         
         query_pre_tokenized = query_sequence.split()
-        if self._filter_gendered_tokens:
-            query_pre_tokenized = [_t for _t in query_pre_tokenized if _t.lower() not in self._gendered_tokens]
-
         if self._max_query_length > -1: # in words
             query_pre_tokenized = query_pre_tokenized[:self._max_query_length]
 
@@ -83,9 +80,6 @@ class IrTripleTransformersNeutralityScoresDatasetReader(DatasetReader):
                                                        add_special_tokens = self._add_special_tokens)["input_ids"]
         
         doc_pos_pre_tokenized = doc_pos_sequence.split()
-        if self._filter_gendered_tokens:
-            doc_pos_pre_tokenized = [_t for _t in doc_pos_pre_tokenized if _t.lower() not in self._gendered_tokens]
-            
         if self._max_doc_length > -1: # in words
             doc_pos_pre_tokenized = doc_pos_pre_tokenized[:self._max_doc_length]
             
@@ -94,9 +88,6 @@ class IrTripleTransformersNeutralityScoresDatasetReader(DatasetReader):
                                                          add_special_tokens = self._add_special_tokens)["input_ids"]
         
         doc_neg_pre_tokenized = doc_neg_sequence.split()
-        if self._filter_gendered_tokens:
-            doc_neg_pre_tokenized = [_t for _t in doc_neg_pre_tokenized if _t.lower() not in self._gendered_tokens]
-
         if self._max_doc_length > -1: # in words
             doc_neg_pre_tokenized = doc_neg_pre_tokenized[:self._max_doc_length]    
             

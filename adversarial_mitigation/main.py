@@ -46,7 +46,7 @@ from optimizers import Optimizer
 from utils import *
 from evaluation import *
 from multiprocess_input_pipeline import *
-from metrics_fairness import FaiRRMetric
+from fairness_measurement.metrics_fairness import FaiRRMetric, FaiRRMetricHelper
 from metrics_utility import EvaluationToolTrec, EvaluationToolMsmarco
 
 Tqdm.default_mininterval = 1
@@ -173,7 +173,8 @@ if __name__ == "__main__":
 
     # fairness
     
-    _background_doc_set = FaiRRMetric.read_documentset_from_retrievalresults(config["background_runfile_path"])
+    _metrichelper = FaiRRMetricHelper()
+    _background_doc_set = _metrichelper.read_documentset_from_retrievalresults(config["background_runfile_path"])
     evaluator_fairness = FaiRRMetric(config["collection_neutrality_path"], _background_doc_set)
     
     ###############################################################################
@@ -218,7 +219,8 @@ if __name__ == "__main__":
     checkpoint_model_store_path = os.path.join(run_folder, "model.checkpoint.pt")
 
 
-    if args.mode in ['debias', 'attack', 'normal']:
+    if args.mode in ['debias', 'attack', 'base']:
+        
         #
         # loading parameters from other pre-trained models
         #
@@ -411,31 +413,31 @@ if __name__ == "__main__":
                         loss_adv = criterion_adversary(output_pos_dict["adv_logprobs"], batch["protected_label_pos"])
                         loss_adv += criterion_adversary(output_neg_dict["adv_logprobs"], batch["protected_label_neg"])
 
-                        if loss_model is None:
-                            loss = loss_adv
-                        elif loss_adv is None:
-                            loss = loss_model
-                        else:
-                            loss = loss_model + loss_adv
+                    if loss_model is None:
+                        loss = loss_adv
+                    elif loss_adv is None:
+                        loss = loss_model
+                    else:
+                        loss = loss_model + loss_adv
 
-                        loss.backward()
+                    loss.backward()
+
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+
+                    if args.mode in ['debias', 'base']:
+                        optimizer_model.step()
+                    if args.mode in ['debias', 'attack']:
+                        optimizer_adv.step()
+
                         
-                        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-                    
-                        if args.mode in ['debias', 'base']:
-                            optimizer_model.step()
-                        if args.mode in ['debias', 'attack']:
-                            optimizer_adv.step()
-                        
-                        
+                    #
+                    # logging
+                    #
                     if loss_model is not None:
                         loss_sum_model += loss_model.item()
                     if loss_adv is not None:
                         loss_sum_adv += loss_adv.item()
                     
-                    #
-                    # logging
-                    #
                     tb_writer.add_scalar("train/loss", loss.item(), batch_cnt_global)
                     if (i % config["log_interval"] == 0) and (i != 0):
                         cur_loss_model = loss_sum_model / float(data_cnt_all)

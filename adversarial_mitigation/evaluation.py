@@ -16,6 +16,7 @@ from sklearn.metrics import accuracy_score
 
 from multiprocess_input_pipeline import *
 from utils import *
+from fairness_measurement.metrics_fairness import FaiRRMetricHelper
 
 METRICS = {'map', 'ndcg_cut', 'recip_rank', 'P', 'recall'}
 
@@ -342,7 +343,8 @@ def evaluate_model(model, config, logger, run_folder, cuda_device, evaluator, ev
     save_adv_predictions(protected_predictions_labels, _path)
     
     # fairness metrics
-    _fairness_retrivalresults = evaluator_fairness.read_retrievalresults_from_runfile(_final_runfile_path)
+    _metrichelper = FaiRRMetricHelper()
+    _fairness_retrivalresults = _metrichelper.read_retrievalresults_from_runfile(_final_runfile_path)
     _fairness_metric_results = evaluator_fairness.calc_FaiRR_retrievalresults(_fairness_retrivalresults)
     
     _fairness_metrics = list(_fairness_metric_results['metrics_avg'].keys())

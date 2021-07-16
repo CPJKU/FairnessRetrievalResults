@@ -22,7 +22,7 @@ preprocessed_tokenized: True
 # training paths (and preprocessing config)
 #
 
-train_tsv: "/share/cp/datasets/ir/msmarco/passage/fair-retrieval-results/triples.train.small.cleaned.neutralityscores.tsv.split-4/*"
+train_tsv: "/share/cp/datasets/ir/msmarco/passage/processed/triples.train.small.cleaned.split-4/*"
 max_training_batch_count: -1 # maximum training batches: -1 for all
 
 #
@@ -39,14 +39,14 @@ evaluation_reranking_cutoff: 200
 # -1 for disabling this feature, and only run validation after every epoch
 validate_every_n_batches: 15000
 
-validation_tsv: "/share/cp/datasets/ir/msmarco/passage/fair-retrieval-results/dev.fairqueries.top1000.clean.neutralityscores.tsv.split-4/*"
-validation_candidate_set_path: "/share/cp/datasets/ir/msmarco/passage/fair-retrieval-results/run.msmarco-passage.BM25.dev.fairqueries.txt"
+validation_tsv: "/share/cp/datasets/ir/msmarco/passage/processed_fair_retrieval/dev.fairness.top1000.clean.tsv.split-4//*"
+validation_candidate_set_path: "/share/cp/datasets/ir/msmarco/passage/processed_fair_retrieval/run.msmarco-passage.BM25.dev.fairqueries.txt"
 validation_qrels: "/share/cp/datasets/ir/msmarco/passage/qrels.dev.tsv"
 
 # SPARSE - TEST
-test_tsv: "/share/cp/datasets/ir/msmarco/passage/fair-retrieval-results/dev.fairqueries.top1000.clean.neutralityscores.tsv.split-4/*"
+test_tsv: "/share/cp/datasets/ir/msmarco/passage/processed_fair_retrieval/dev.fairness.top1000.clean.tsv.split-4//*"
 test_qrels: "/share/cp/datasets/ir/msmarco/passage/qrels.dev.tsv"
-test_candidate_set_path: "/share/cp/datasets/ir/msmarco/passage/fair-retrieval-results/run.msmarco-passage.BM25.dev.fairqueries.txt"
+test_candidate_set_path: "/share/cp/datasets/ir/msmarco/passage/processed_fair_retrieval/run.msmarco-passage.BM25.dev.fairqueries.txt"
 test_files_prefix: "SPARSE-"
 
 # TREC - 2019 - TEST
@@ -64,8 +64,10 @@ metric_tocompare: 'recip_rank'
 trec_eval_path: "/share/rk0/home/navid/trec_eval/trec_eval"
 
 # fairness metric
-collection_neutrality_path: '/share/cp/datasets/ir/msmarco/passage/fair-retrieval-results/collection_neutralityscores.tsv'
-background_runfile_path: '/share/cp/datasets/ir/msmarco/passage/fair-retrieval-results/run.msmarco-passage.BM25.dev.fairqueries.txt'
+collection_neutrality_path: '/share/cp/datasets/ir/msmarco/passage/processed_fair_retrieval/collection_neutralityscores.tsv'
+background_runfile_path: '/share/cp/datasets/ir/msmarco/passage/processed_fair_retrieval/run.msmarco-passage.BM25.dev.fairqueries.txt'
+neutrality_representative_words_path: '../resources/wordlist_gender_representative.txt'
+neutrality_threshold: 1
 
 #
 # pre-trained word representation inputs (embedding layer)
@@ -94,7 +96,7 @@ bert_dropout: 0.1
 # -----------------------
 #
 
-model: "bertadv" # available: knrm, conv_knrm, conv_knrm_same_gram, match_pyramid
+model: "bertadv"
 
 loss_model: "crossentropy"
 loss_model_maxmargin_margin: 1
@@ -107,16 +109,15 @@ param_group_model_weight_decay: 0
 param_group_adversary_learning_rate: 0.00003
 param_group_adversary_weight_decay: 0
 
-# disable with patience = -1 
-learning_rate_scheduler_patience: -1 # 5
+
+learning_rate_scheduler_patience: 5 # disable with -1 
 learning_rate_scheduler_factor: 0.5
 
 epochs: 2
 batch_size_train: 64
 batch_size_eval: 128
 
-# disable with patience = -1 
-early_stopping_patience: -1 # 15
+early_stopping_patience: 15 # disable with -1 
 
 
 # per model params: specify with modelname_param: ...

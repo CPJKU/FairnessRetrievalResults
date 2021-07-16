@@ -54,4 +54,3 @@ class DocumentNeutrality:
 
         return _neutrality
     
-

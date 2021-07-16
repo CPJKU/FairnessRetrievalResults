@@ -13,6 +13,14 @@
 2) 7.06.20 14:00 the config is set to start validation after just 50 training batches to catch the feeding bug (issue #4) which comes up after 56k batches of validation;
 3) python3 train.py --run-name experiment1 --config-file configs/jku-msmarco-passage-PGN.yaml --cuda --gpu-id 0
 
+python tuples_filter_fairness_queries.py --in-file /share/cp/datasets/ir/msmarco/passage/processed/dev.not-subset.top1000.clean.tsv --fairness-qry-path ../../dataset/msmarco_passage.dev.fair.tsv --out-file /share/cp/datasets/ir/msmarco/passage/processed_fair_retrieval/dev.fairness.top1000.clean.tsv
+
+bash generate_file_split.sh /share/cp/datasets/ir/msmarco/passage/processed_fair_retrieval/dev.fairness.top1000.clean.tsv 4 /share/cp/datasets/ir/msmarco/passage/processed_fair_retrieval/dev.fairness.top1000.clean.tsv.split-4/
+
+
+python main.py --config-file configs/msmarco-passage.yaml --cuda --gpu-id 0 --mode base --run-name base
+ 
+ 
 ### Usage - test
 ```sh
 $ python3 train.py --cuda --gpu-id 0 --run-folder /share/home/oleg/experiments/NEUROIR_WORKS/msmarco-passage/generative/2020-08-17_112302.61_KNRM_performance --test

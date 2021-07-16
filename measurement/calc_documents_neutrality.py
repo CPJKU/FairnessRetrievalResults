@@ -12,14 +12,15 @@ from document_neutrality import DocumentNeutrality
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--collection-path', action='store', dest='collection_path',
-                    help='path the the collection file in tsv format (docid [tab] doctext)', required=True)
+                    default="/share/cp/datasets/ir/msmarco/passage/processed/collection.clean.tsv",
+                    help='path the the collection file in tsv format (docid [tab] doctext)')
 parser.add_argument('--representative-words-path', action='store', dest='representative_words_path',
-                    default="../resources/wordlist_gender_representative.txt",
+                    default="../resources/wordlist_protectedattribute_gender.txt",
                     help='path to the list of representative words which define the protected attribute')
 parser.add_argument('--threshold', action='store', type=int, default=1,
                     help='threshold on the number of sensitive words')
 parser.add_argument('--out-file', action='store', dest='out_file', 
-                    default="processed/collection_neutralityscores.tsv",
+                    default="/share/cp/datasets/ir/msmarco/passage/processed_fair_retrieval/collection_neutralityscores.tsv",
                     help='output file containing docids and document neutrality scores')
 
 args = parser.parse_args()

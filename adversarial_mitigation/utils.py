@@ -57,8 +57,8 @@ def get_parser():
                         help='run folder if it exists, if not set a new one is created using run-name', required=False)
     parser.add_argument('--pretrained-model-folder', action='store', dest='pretrained_model_folder',
                         help='the pre-trained model is loaded and its parameters will be replaced', required=False)
-    parser.add_argument('--mode', action='store',
-                        help='mainadv, attack, main, test', required=True)
+    parser.add_argument('--mode', action='store', choices=['base', 'debias', 'attack', 'test'],
+                        help='base: usual BERT training without any adversarial optimization, debias: training AdvBERT (preferably from an existing checkpoint), attack: only trains the weights of adversarial head, test: only evaluate an existing model', required=True)
     
     parser.add_argument('--config-file', action='store', dest='config_file',
                         help='config file with all hyper-params & paths', required=False)

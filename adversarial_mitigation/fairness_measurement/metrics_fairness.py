@@ -65,7 +65,6 @@ class FaiRRMetric:
                 IFaiRR_perq[_threshold][_qryid] = np.sum(np.multiply(_bachgroundset_neut[_qryid][:_th], _position_biases[:_th]))
             
         ## calculate Normalized FaiRR
-        #pdb.set_trace()
         NFaiRR = {}
         NFaiRR_perq = {}
         for _threshold in thresholds:
@@ -79,9 +78,11 @@ class FaiRRMetric:
         
         return {'metrics_avg': {'FaiRR': FaiRR, 'NFaiRR': NFaiRR}, 
                 'metrics_perq': {'FaiRR': FaiRR_perq, 'NFaiRR': NFaiRR_perq}}
+    
 
-    @staticmethod
-    def read_retrievalresults_from_runfile(trec_run_path, cut_off=200):
+class FaiRRMetricHelper:
+
+    def read_retrievalresults_from_runfile(self, trec_run_path, cut_off=200):
         retrievalresults = {}
         
         print ("Reading %s" % trec_run_path)
@@ -111,10 +112,35 @@ class FaiRRMetric:
         
         return retrievalresults
     
-    @staticmethod
-    def read_documentset_from_retrievalresults(trec_run_path):
-        _retrivalresults_background = FaiRRMetric.read_retrievalresults_from_runfile(trec_run_path)
+    def read_documentset_from_retrievalresults(self, trec_run_path):
+        _retrivalresults_background = self.read_retrievalresults_from_runfile(trec_run_path)
         background_doc_set = {}
         for _qryid in _retrivalresults_background:
             background_doc_set[_qryid] = set(_retrivalresults_background[_qryid])
         return background_doc_set
+
+
+if __name__ == "__main__":
+    #
+    # config
+    #
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--collection-neutrality-path', action='store', dest='collection_neutrality_path',
+                        default="/share/cp/datasets/ir/msmarco/passage/processed_fair_retrieval/collection_neutralityscores.tsv",
+                        help='path to the file containing neutrality values of documents in tsv format (docid [tab] score)')
+    parser.add_argument('--runfile', action='store', dest='runfile',
+                        help='path to the run file in TREC format', required=True)
+    parser.add_argument('--backgroundrunfile', action='store', default="resources/msmarco_fair.background_run.txt",
+                        help='path to the run file for the set of background documents in TREC format', required=True)
+    args = parser.parse_args()
+    
+    _metrichelper = FaiRRMetricHelper()
+    _retrivalresults = _metrichelper.read_retrievalresults_from_runfile(args.runfile)
+    _background_doc_set = _metrichelper.read_documentset_from_retrievalresults(args.backgroundrunfile)
+    
+    _metric = FaiRRMetric(args.collection_neutrality_path, _background_doc_set)
+    _metric_res = _metric.calc_FaiRR_retrievalresults(_retrivalresults)
+    
+    print (_metric_res)
+    
