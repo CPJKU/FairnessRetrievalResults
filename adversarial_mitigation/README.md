@@ -18,12 +18,15 @@ First, edit configs/msmarco-passge.yaml based on your file paths
 Sample run commands for different usecases:
 
 ###base
+
 ```python main.py --config-file configs/jku-msmarco-passage.yaml --cuda --gpu-id 0 --mode base --run-name base_l2```
 
 ###debias
+
 ```python main.py --config-file configs/msmarco-passage.yaml --cuda --gpu-id 0 --pretrained-model-folder [PATH] --config-overwrites "early_stopping_patience: -1, learning_rate_scheduler_patience: -1, adv_rev_factor: 1.0" --mode debias --run-name debias_tiny```
 
 ###attack
+
 ```python main.py --config-file configs/msmarco-passage.yaml --cuda --gpu-id 0 --pretrained-model-folder [PATH] --config-overwrites "early_stopping_patience: -1, learning_rate_scheduler_patience: -1, adv_rev_factor: 1.0" --mode attack --run-name attack_tiny```
 
  
