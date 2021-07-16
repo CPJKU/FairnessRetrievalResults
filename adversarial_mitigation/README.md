@@ -1,57 +1,30 @@
-## Recommended setup
 
-* Anaconda, python3.7+;
-* Pytorch 1.3+;
-* Pip (Anaconda);
-* Allennlp (pip) version 0.9.0;
-* Gensim (pip);
-* GPUtil (pip);
-* pip install transformers ;
+## Data preperation
+
+This base of this code is taken from (DeepGenIR)[https://github.com/CPJKU/DeepGenIR] repository. Please first follow the steps in that repository to prepare data files. 
+
+Next, in order to create query-document tuples only for the fairness sensitive queries, execute the following commands:
+```
+cd collection_preparation
+python tuples_filter_fairness_queries.py --in-file [PATH-TO-DEV-TUPLES] --fairness-qry-path ../../dataset/msmarco_passage.dev.fair.tsv --out-file [PATH-TO-DEV-TUPLES-NEW]
+bash generate_file_split.sh [PATH-TO-DEV-TUPLES-NEW] 4 [PATH-TO-DEV-TUPLES-NEW].split-4/
+```
+
+
 
 ## Usage
-1) In configs/jku-msmarco-passge-PGN.yaml in lines 6-12 uncomment/comment needed work folders;
-2) 7.06.20 14:00 the config is set to start validation after just 50 training batches to catch the feeding bug (issue #4) which comes up after 56k batches of validation;
-3) python3 train.py --run-name experiment1 --config-file configs/jku-msmarco-passage-PGN.yaml --cuda --gpu-id 0
+First, edit configs/msmarco-passge.yaml based on your file paths
 
-python tuples_filter_fairness_queries.py --in-file /share/cp/datasets/ir/msmarco/passage/processed/dev.not-subset.top1000.clean.tsv --fairness-qry-path ../../dataset/msmarco_passage.dev.fair.tsv --out-file /share/cp/datasets/ir/msmarco/passage/processed_fair_retrieval/dev.fairness.top1000.clean.tsv
+Sample run commands for different usecases:
 
-bash generate_file_split.sh /share/cp/datasets/ir/msmarco/passage/processed_fair_retrieval/dev.fairness.top1000.clean.tsv 4 /share/cp/datasets/ir/msmarco/passage/processed_fair_retrieval/dev.fairness.top1000.clean.tsv.split-4/
+###base
+```python main.py --config-file configs/jku-msmarco-passage.yaml --cuda --gpu-id 0 --mode base --run-name base_l2```
 
+###debias
+```python main.py --config-file configs/msmarco-passage.yaml --cuda --gpu-id 0 --pretrained-model-folder [PATH] --config-overwrites "early_stopping_patience: -1, learning_rate_scheduler_patience: -1, adv_rev_factor: 1.0" --mode debias --run-name debias_tiny```
 
-python main.py --config-file configs/msmarco-passage.yaml --cuda --gpu-id 0 --mode base --run-name base
+###attack
+```python main.py --config-file configs/msmarco-passage.yaml --cuda --gpu-id 0 --pretrained-model-folder [PATH] --config-overwrites "early_stopping_patience: -1, learning_rate_scheduler_patience: -1, adv_rev_factor: 1.0" --mode attack --run-name attack_tiny```
+
  
  
-### Usage - test
-```sh
-$ python3 train.py --cuda --gpu-id 0 --run-folder /share/home/oleg/experiments/NEUROIR_WORKS/msmarco-passage/generative/2020-08-17_112302.61_KNRM_performance --test
-```
-* key ```--custom-test-depth <int>``` to fix reranking depth during test;
-* key ```--test-files-prefix <str>``` to add meaningful pre to saved test files. Files do not get overwrited. Meaningless prefixes are added in case of conflicts.
-
-Set those three below for new custom test set:
-* key ```--custom-test-tsv <str>```
-* key ```--custom-test-qrels <str>```
-* key ```--custom-test-candidates <str>```
-
-### Usage - test commands:
-Test-set 1: **SPARCE**
-```sh
-$ python3 train.py --cuda --test --custom-test-depth 200 --custom-test-tsv "/share/cp/datasets/ir/msmarco/passage/processed/validation.not-subset.top200.cleaned.split-4/*" --custom-test-qrels "/share/cp/datasets/ir/msmarco/passage/qrels.dev.tsv" --custom-test-candidates "/share/cp/datasets/ir/msmarco/passage/run.msmarco-passage.BM25_k1_0.9_b_0.4.dev.txt" --test-files-pretfix "SPARSE-" --run-folder <run_folder> --gpu-id 0
-```
-
-Test-set 2: **TREC - 2019**
-```sh
-$ python3 train.py --cuda --test --custom-test-depth 200 --custom-test-tsv "/share/cp/datasets/ir/msmarco/passage/processed/test2019.top1000.cleaned.split-4/*" --custom-test-qrels "/share/cp/datasets/ir/msmarco/passage/test2019-qrels.txt" --custom-test-candidates "/share/cp/datasets/ir/msmarco/passage/run.msmarco-passage.BM25-k1_0.82_b_0.72.test2019.txt" --test-files-pretfix "TREC-19-" --run-folder <run_folder> --gpu-id 0
-```
-
-
-## Other
-* key ```--debug``` can be used to check if the whole pipeline is in one piece: it shortens training, validation and test;
-* make sure to adjust "expirement_base_path" and "debug_base_path" in ```configs/*.yaml```
-
-## "Best" settings for running different models
-* Bert (Matching) Tiny
-```sh
-$ python train.py --config-file [PATH_TO_CONFIG_FILE] --cuda --gpu-id 0 --config-overwrites "model: bert"
-```
-
