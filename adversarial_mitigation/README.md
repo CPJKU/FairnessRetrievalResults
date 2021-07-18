@@ -1,7 +1,22 @@
+This folder provides the code for Adversarial Training of BERT ranker for Gender Bias mitigation in retrieval results. 
+
+## Recommended setup
+
+* Python 3.7+;
+* Pytorch 1.3+;
+
+PIP:
+* Anaconda;
+* Pytorch 1.3+;
+* Pip (Anaconda);
+* Allennlp (pip) version 0.9.0;
+* Gensim;
+* GPUtil;
+* pip install transformers ;
 
 ## Data preperation
 
-This base of this code is taken from (DeepGenIR)[https://github.com/CPJKU/DeepGenIR] repository. Please first follow the steps in that repository to prepare data files. 
+To prepare the training data, please first consult the "How to train the models" section [in this repository](https://github.com/sebastian-hofstaetter/sigir19-neural-ir).
 
 Next, in order to create query-document tuples only for the fairness sensitive queries, execute the following commands:
 ```
@@ -30,4 +45,5 @@ Sample run commands for different usecases:
 ```python main.py --config-file configs/msmarco-passage.yaml --cuda --gpu-id 0 --pretrained-model-folder [PATH] --config-overwrites "early_stopping_patience: -1, learning_rate_scheduler_patience: -1, adv_rev_factor: 1.0" --mode attack --run-name attack_tiny```
 
  
+This repository was branched from [DeepGenIR](https://github.com/CPJKU/DeepGenIR) and developed to incorporate Adversarial Training for Gender Bias Mitigation. **The two repositories share the same structure and data preparation routine.**
  
