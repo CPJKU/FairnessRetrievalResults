@@ -202,8 +202,10 @@ if __name__ == "__main__":
     # Model
     ###############################################################################
 
-    model = AdvBert(bert = transformer_embedder, adv_rev_factor=config["adv_rev_factor"],
-                    cls_token_id=_bert_cls_token_id, sep_token_id=_bert_sep_token_id)
+    if config["model"] == "bertadv":
+        model = AdvBert(bert = transformer_embedder, adv_rev_factor=config["adv_rev_factor"],
+                        cls_token_id=_bert_cls_token_id, sep_token_id=_bert_sep_token_id)
+    
     
     if cuda_device != -1:
         model.cuda(cuda_device)

@@ -105,7 +105,7 @@ def get_logger_to_file(run_folder,name):
 
     return logger
 
-def prepare_experiment_folder(base_path, run_name, add_timestamp=True):
+def prepare_experiment_folder(base_path, run_name, add_timestamp=False):
     if add_timestamp:
         time_stamp = datetime.now().strftime('%Y-%m-%d_%H%M%S.%f')[:-4]
         run_folder = os.path.join(base_path, time_stamp + "_" + run_name)
@@ -157,7 +157,7 @@ def prepare_experiment(args):
                 _attack_number += 1
             args.run_name = _attack_run_name
             
-        run_folder = prepare_experiment_folder(_base_path, args.run_name, args.mode != 'attack')
+        run_folder = prepare_experiment_folder(_base_path, args.run_name)
 
         save_config(os.path.join(run_folder, "config.yaml"), config)
         

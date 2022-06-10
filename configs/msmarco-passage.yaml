@@ -3,7 +3,7 @@
 # ----------------------------
 #
 
-expirement_base_path: "/share/home/navid/experiments/neuralir/msmarco-passage/bias_ir"
+expirement_base_path: "/share/home/navid/experiments/neuralir/msmarco-passage/advranker"
 debug_base_path: "/share/home/navid/experiments/neuralir/debug"
 tqdm_disabled: True
 log_interval: 1000
@@ -66,7 +66,7 @@ trec_eval_path: "/share/rk0/home/navid/trec_eval/trec_eval"
 # fairness metric
 collection_neutrality_path: '/share/cp/datasets/ir/msmarco/passage/processed_fair_retrieval/collection_neutralityscores.tsv'
 background_runfile_path: '/share/cp/datasets/ir/msmarco/passage/processed_fair_retrieval/run.msmarco-passage.BM25.dev.fairqueries.txt'
-neutrality_representative_words_path: '../resources/wordlist_gender_representative.txt'
+neutrality_representative_words_path: 'resources/wordlist_gender_representative.txt'
 neutrality_threshold: 1
 
 #
@@ -74,7 +74,8 @@ neutrality_threshold: 1
 # --------------------------------------------------------
 #
 
-transformers_pretrained_model_id: 'google/bert_uncased_L-2_H-128_A-2' # name identifier of a pre-trained transformers model.
+transformers_pretrained_model_id: 'google/bert_uncased_L-4_H-256_A-4' # name identifier of a pre-trained transformers model.
+# google/bert_uncased_L-2_H-128_A-2
 # google/bert_uncased_L-4_H-256_A-4
 # bert-base-uncased
 
@@ -110,14 +111,14 @@ param_group_adversary_learning_rate: 0.00003
 param_group_adversary_weight_decay: 0
 
 
-learning_rate_scheduler_patience: 5 # disable with -1 
+learning_rate_scheduler_patience: -1 # disable with -1 
 learning_rate_scheduler_factor: 0.5
 
-epochs: 2
-batch_size_train: 64
-batch_size_eval: 128
+epochs: 1
+batch_size_train: 32
+batch_size_eval: 64
 
-early_stopping_patience: 15 # disable with -1 
+early_stopping_patience: -1 # disable with -1 
 
 
 # per model params: specify with modelname_param: ...
