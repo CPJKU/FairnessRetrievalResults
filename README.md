@@ -1,27 +1,49 @@
-# Welcome
+This folder provides the code for Adversarial Training of BERT ranker for Gender Bias mitigation in retrieval results. 
 
-The repository provides the code and resources for measuring and addressing societal biases in retrieval results, as discussed in the paper:
+## Recommended setup
 
-Societal Biases in Retrieved Contents: Measurement Framework and Adversarial Mitigation of BERT Rankers.\
-*Navid Rekabsaz, Simone Kopeinik, Markus Schedl*. \
-In proceedings of the 44th International ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR 2021). [Paper](https://arxiv.org/abs/2104.13640)
+* Python 3.7+;
+* Pytorch 1.3+;
 
-Please find more information about each of the contributions in its corresponding folder:
+PIP:
+* Anaconda;
+* Pytorch 1.3+;
+* Pip (Anaconda);
+* Allennlp (pip) version 0.9.0;
+* Gensim;
+* GPUtil;
+* pip install transformers ;
 
-- `dataset`: The dataset of fairness sensitive queries.
-- `measurement`: The code for measuring FaiRR and NFaiRR metrics, calculated on ranking results or on ranker-agnostic document sets. 
-- `adversarial_mitigation`: The code for adversarial training of BERT rankers to mitigate gender bias (AdvBERT).
+## Data preperation
 
+To prepare the training data, please first consult the "How to train the models" section [in this repository](https://github.com/sebastian-hofstaetter/sigir19-neural-ir).
 
+Next, in order to create query-document tuples only for the fairness sensitive queries, execute the following commands:
 ```
-@inproceedings{rekabsaz2021fairnessir,
-    title={Societal Biases in Retrieved Contents: Measurement Framework and Adversarial Mitigation of BERT Rankers},
-    author={Rekabsaz, Navid and Kopeinik, Simone and Schedl, Markus},
-    booktitle={In Proceedings of the 44th International ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR'21), July 11–15, 2021, Virtual Event, Canada},
-    doi={10.1145/3404835.3462949}
-    year={2021},
-    publisher = {{ACM}}
-}
+cd collection_preparation
+python tuples_filter_fairness_queries.py --in-file [PATH-TO-DEV-TUPLES] --fairness-qry-path ../../dataset/msmarco_passage.dev.fair.tsv --out-file [PATH-TO-DEV-TUPLES-NEW]
+bash generate_file_split.sh [PATH-TO-DEV-TUPLES-NEW] 4 [PATH-TO-DEV-TUPLES-NEW].split-4/
 ```
-Contact [Navid](mailto:navid.rekabsaz@jku.at) for any question.
 
+
+
+## Usage
+First, edit configs/msmarco-passge.yaml based on your file paths
+
+Sample run commands for different usecases:
+
+### Base model (BERT)
+
+```python main.py --config-file configs/jku-msmarco-passage.yaml --cuda --gpu-id 0 --mode base --run-name base_l2```
+
+### Training AdvBERT
+
+```python main.py --config-file configs/msmarco-passage.yaml --cuda --gpu-id 0 --pretrained-model-folder [PATH] --config-overwrites "early_stopping_patience: -1, learning_rate_scheduler_patience: -1, adv_rev_factor: 1.0" --mode debias --run-name debias_tiny```
+
+### Adversarial Attack
+
+```python main.py --config-file configs/msmarco-passage.yaml --cuda --gpu-id 0 --pretrained-model-folder [PATH] --config-overwrites "early_stopping_patience: -1, learning_rate_scheduler_patience: -1, adv_rev_factor: 1.0" --mode attack --run-name attack_tiny```
+
+ 
+This repository was branched from [DeepGenIR](https://github.com/CPJKU/DeepGenIR) and developed to incorporate Adversarial Training for Gender Bias Mitigation. **The two repositories share the same structure and data preparation routine.**
+ 
