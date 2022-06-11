@@ -440,11 +440,12 @@ if __name__ == "__main__":
                     if loss_adv is not None:
                         loss_sum_adv += loss_adv.item()
                     
-                    tb_writer.add_scalar("train/loss", loss.item(), batch_cnt_global)
                     if (i % config["log_interval"] == 0) and (i != 0):
                         cur_loss_model = loss_sum_model / float(data_cnt_all)
                         cur_loss_adv = loss_sum_adv / float(data_cnt_all)
                         
+                        tb_writer.add_scalar("train/loss/model", cur_loss_model, batch_cnt_global)
+                        tb_writer.add_scalar("train/loss/adv", cur_loss_adv, batch_cnt_global)
                         logger.info('| TRAIN | %s | epoch %3d | %5d batches | lrs %s %s | avg. loss %.5f %.5f' %
                                     (args.run_name, epoch, i, str(['%02.6f' % pg['lr'] for pg in optimizer_model.param_groups]), 
                                      str(['%02.6f' % pg['lr'] for pg in optimizer_adv.param_groups]), 
