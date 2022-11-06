@@ -12,12 +12,13 @@ Please find more information about each of the contributions in its correspondin
 - `measurement`: The code for measuring FaiRR and NFaiRR metrics, calculated on ranking results or on ranker-agnostic document sets. 
 - `adversarial_mitigation`: The code for adversarial training of BERT rankers to mitigate gender bias (AdvBERT).
 
+[AdvBERT model in Hugging Face](https://huggingface.co/navid-rekabsaz/advbert_ranker_l4)
 
 ```
 @inproceedings{rekabsaz2021fairnessir,
     title={Societal Biases in Retrieved Contents: Measurement Framework and Adversarial Mitigation of BERT Rankers},
     author={Rekabsaz, Navid and Kopeinik, Simone and Schedl, Markus},
-    booktitle={In Proceedings of the 44th International ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR'21), July 11–15, 2021, Virtual Event, Canada},
+    booktitle={In Proceeding of the 44th International ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR'21), July 11–15, 2021, Virtual Event, Canada},
     doi={10.1145/3404835.3462949}
     year={2021},
     publisher = {{ACM}}
